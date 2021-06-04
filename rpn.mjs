@@ -84,8 +84,10 @@ else if (process.argv[2] == '-postfixToInfix') {
         else if (stack.length > 1) {
             let operand2 = stack.pop();
             let operand1 = stack.pop();
-            if (operand2.length > 1) operand2 = '(' + operand2 + ')';
-            if (operand1.length > 1) operand1 = '(' + operand1 + ')';
+            if (operand2.length > 1 && input[i] != '+' && input[i] != '-' && operand2[0] != '(')
+                operand2 = '(' + operand2 + ')';
+            if (operand1.length > 1 && input[i] != '+' && input[i] != '-' && operand1[0] != '(')
+                operand1 = '(' + operand1 + ')';
             let newOperand = operand1 + input[i] + operand2;
             stack.push(newOperand);
         }
