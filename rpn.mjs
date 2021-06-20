@@ -1,5 +1,8 @@
 if (process.argv[2] == '-h') {
-    console.log('help...');
+    console.log('\nПример запуска программы:\n\n' +
+    'node rpn.mjs -infixToPostfix/-postfixToInfix "1+5"\n\n' +
+    'Замечание: если в выражении присутствуют операнды более одного разряда, нужно каждый операнд и ' +
+    'операцию (в том числе скобки) разделять пробелами. Пример: ( 10 + 3 ) / 2\n');
     process.exit(0);
 }
 
@@ -32,8 +35,16 @@ if (process.argv[2] == '-infixToPostfix') {
     let stack = [];
     let out = '';
     let isCloseBracketFound = bracketsFindingState.Default;
+    let wereSpaces = false;
+    if (input.indexOf(' ') > -1) {
+        input = input.split(' ');
+        wereSpaces = true;
+    }
     for (let i = 0; i < input.length; ++i) {
-        if (isNumber(input[i]) || isLetter(input[i])) out += input[i];
+        if (isNumber(input[i]) || isLetter(input[i])) {
+            if (i == 0 || !wereSpaces) out += input[i];
+            else if (wereSpaces) out = out + ' ' + input[i];
+        }
         else if (operators.indexOf(input[i]) != -1) {
             if (input[i] != ')') {
                 if (input[i] == '(') {
@@ -42,21 +53,28 @@ if (process.argv[2] == '-infixToPostfix') {
                 }
                 else if (input[i] == '^') {
                     while (operatorsWithoutBrackets.indexOf(stack[stack.length - 1]) != -1 &&
-                        operatorPriorities[input[i]] < operatorPriorities[stack[stack.length - 1]])
-                        out = out + stack.pop();
+                        operatorPriorities[input[i]] < operatorPriorities[stack[stack.length - 1]]) {
+                            if (i == 0 || !wereSpaces) out = out + stack.pop();
+                            else if (wereSpaces) out = out + ' ' + stack.pop();
+                        }
                     stack.push(input[i]);
                 }
                 else {
                     while (operatorsWithoutBrackets.indexOf(stack[stack.length - 1]) != -1 &&
-                        operatorPriorities[input[i]] <= operatorPriorities[stack[stack.length - 1]])
-                        out = out + stack.pop();
+                        operatorPriorities[input[i]] <= operatorPriorities[stack[stack.length - 1]]) {
+                            if (i == 0 || !wereSpaces) out = out + stack.pop();
+                            else if (wereSpaces) out = out + ' ' + stack.pop();
+                        }
                     stack.push(input[i]);
                 }
             }
             else {
                 isCloseBracketFound = bracketsFindingState.Found;
                 while (stack[stack.length - 1] != '(') {
-                    if (stack.length > 0 && stack[stack.length - 1] != ')') out = out + stack.pop();
+                    if (stack.length > 0 && stack[stack.length - 1] != ')') {
+                        if (i == 0 || !wereSpaces) out = out + stack.pop();
+                        else if (wereSpaces) out = out + ' ' + stack.pop();
+                    }
                     else {
                         console.log('Ошибка: не найдена открывающая скобка');
                         process.exit(1);
@@ -74,21 +92,36 @@ if (process.argv[2] == '-infixToPostfix') {
         console.log('Ошибка: не найдена закрывающая скобка');
         process.exit(2);
     }
-    while (stack.length > 0) out = out + stack.pop();
+    while (stack.length > 0) {
+        if (!wereSpaces) out = out + stack.pop();
+        else out = out + ' ' + stack.pop();
+    }
     console.log(out);
 }
 else if (process.argv[2] == '-postfixToInfix') {
     let stack = [];
+    let wereSpaces = false;
+    if (input.indexOf(' ') > -1) {
+        input = input.split(' ');
+        wereSpaces = true;
+    }
     for (let i = 0; i < input.length; ++i) {
         if (isNumber(input[i]) || isLetter(input[i])) stack.push(input[i]);
         else if (stack.length > 1) {
             let operand2 = stack.pop();
             let operand1 = stack.pop();
-            if (operand2.length > 1 && input[i] != '+' && input[i] != '-' && operand2[0] != '(')
-                operand2 = '(' + operand2 + ')';
-            if (operand1.length > 1 && input[i] != '+' && input[i] != '-' && operand1[0] != '(')
-                operand1 = '(' + operand1 + ')';
-            let newOperand = operand1 + input[i] + operand2;
+            if (operand2.length > 1 && input[i] != '+' && input[i] != '-' && operand2[0] != '(') {
+                if (wereSpaces) operand2 = '( ' + operand2 + ' )';
+                else operand2 = '(' + operand2 + ')';
+            }
+                
+            if (operand1.length > 1 && input[i] != '+' && input[i] != '-' && operand1[0] != '(') {
+                if (wereSpaces) operand1 = '( ' + operand1 + ' )';
+                else operand1 = '(' + operand1 + ')';
+            }
+            let newOperand;
+            if (wereSpaces) newOperand = operand1 + ' ' + input[i] + ' ' + operand2;
+            else newOperand = operand1 + input[i] + operand2;
             stack.push(newOperand);
         }
         else {
