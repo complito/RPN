@@ -1,12 +1,5 @@
 if (process.argv[2] == '-h') {
-    console.log(`
-Пример запуска программы:
-
-node rpn.mjs -infixToPostfix/-postfixToInfix "1+5"
-
-Замечание: если в выражении присутствуют операнды более одного разряда, нужно каждый операнд и
-операцию (в том числе скобки) разделять пробелами. Пример: ( 10 + 3 ) / 2
-`);
+    console.log('\nПример запуска программы:\n\nnode rpn.mjs -infixToPostfix/-postfixToInfix "1+5"\n\nЗамечание: если в выражении присутствуют операнды более одного разряда, нужно каждый операнд и операцию (в том числе скобки) разделять пробелами. Пример: ( 10 + 3 ) / 2\n');
     process.exit(0);
 }
 
@@ -15,6 +8,11 @@ function isNumber(i) {
 }
 function isLetter(i) {
     return (i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z');
+}
+function doesIncludeAnyOperator(str) {
+    for (const operator of operatorsWithoutBrackets)
+        if (str.includes(operator)) return true;
+    return false;
 }
 
 let input = process.argv[3];
@@ -50,6 +48,10 @@ if (process.argv[2] == '-infixToPostfix') {
             else if (wereSpaces) out = out + ' ' + input[i];
         }
         else if (operators.indexOf(input[i]) != -1) {
+            if (i > 0 && operators.includes(input[i - 1])) {
+                console.log('Ошибка: для бинарной операции найдено менее 2-ух операндов');
+                process.exit(4);
+            }
             if (input[i] != ')') {
                 if (input[i] == '(') {
                     stack.push(input[i]);
@@ -114,13 +116,17 @@ else if (process.argv[2] == '-postfixToInfix') {
         else if (stack.length > 1) {
             let operand2 = stack.pop();
             let operand1 = stack.pop();
-            if (operand2.length > 1 && ((input[i] == '-' && operand1[0] != '(') || input[i] != '-')) {
-                if (wereSpaces) operand2 = '( ' + operand2 + ' )';
-                else operand2 = '(' + operand2 + ')';
-            }
-            if (operand1.length > 1 && ((input[i] == '-' && operand1[0] != '(' && operand2.length > 1) || input[i] != '-')) {
-                if (wereSpaces) operand1 = '( ' + operand1 + ' )';
-                else operand1 = '(' + operand1 + ')';
+            if (operatorsWithoutBrackets.includes(input[i]) && operatorsWithoutBrackets.includes(input[i - 1])) {
+                if (operatorPriorities[input[i]] >= operatorPriorities[input[i - 1]] && input[i] != input[i - 1]) {
+                    if (doesIncludeAnyOperator(operand1) && operand1[0] != '(') {
+                        if (wereSpaces) operand1 = '( ' + operand1 + ' )';
+                        else operand1 = '(' + operand1 + ')';
+                    }
+                    if (doesIncludeAnyOperator(operand2) && operand2[0] != '(') {
+                        if (wereSpaces) operand2 = '( ' + operand2 + ' )';
+                        else operand2 = '(' + operand2 + ')';
+                    }
+                }
             }
             let newOperand;
             if (wereSpaces) newOperand = operand1 + ' ' + input[i] + ' ' + operand2;
