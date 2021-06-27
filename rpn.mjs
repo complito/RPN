@@ -1,8 +1,12 @@
 if (process.argv[2] == '-h') {
-    console.log('\nПример запуска программы:\n\n' +
-    'node rpn.mjs -infixToPostfix/-postfixToInfix "1+5"\n\n' +
-    'Замечание: если в выражении присутствуют операнды более одного разряда, нужно каждый операнд и ' +
-    'операцию (в том числе скобки) разделять пробелами. Пример: ( 10 + 3 ) / 2\n');
+    console.log(`
+Пример запуска программы:
+
+node rpn.mjs -infixToPostfix/-postfixToInfix "1+5"
+
+Замечание: если в выражении присутствуют операнды более одного разряда, нужно каждый операнд и
+операцию (в том числе скобки) разделять пробелами. Пример: ( 10 + 3 ) / 2
+`);
     process.exit(0);
 }
 
@@ -110,12 +114,11 @@ else if (process.argv[2] == '-postfixToInfix') {
         else if (stack.length > 1) {
             let operand2 = stack.pop();
             let operand1 = stack.pop();
-            if (operand2.length > 1 && input[i] != '+' && input[i] != '-' && operand2[0] != '(') {
+            if (operand2.length > 1 && ((input[i] == '-' && operand1[0] != '(') || input[i] != '-')) {
                 if (wereSpaces) operand2 = '( ' + operand2 + ' )';
                 else operand2 = '(' + operand2 + ')';
             }
-                
-            if (operand1.length > 1 && input[i] != '+' && input[i] != '-' && operand1[0] != '(') {
+            if (operand1.length > 1 && ((input[i] == '-' && operand1[0] != '(' && operand2.length > 1) || input[i] != '-')) {
                 if (wereSpaces) operand1 = '( ' + operand1 + ' )';
                 else operand1 = '(' + operand1 + ')';
             }
